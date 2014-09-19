@@ -232,11 +232,15 @@
 
         add: function(name){
             this.allowed += this.agreeValue[name];
-            this.setCookie(this.allowed);
+            this.save();
         },
 
         set: function(value){
             this.allowed = value;
+            this.save();
+        },
+
+        save: function(){
             this.setCookie(this.allowed);
         },
 
@@ -279,6 +283,7 @@
             });
             Utils.on(inputNo, 'change', function(){
                 self.nextQuestion();
+                self.save();
             });
 
             labelYes.appendChild(inputYes);
