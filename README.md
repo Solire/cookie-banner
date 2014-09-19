@@ -1,4 +1,4 @@
-# Cookie Banner
+# Cookie Banner with forms
 
 Cookie Banner is a super-easy way to ensure you're complying with the EU
 cookie law. Just reference the `cookiebanner.min.js` script from your page
