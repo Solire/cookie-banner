@@ -596,7 +596,6 @@
 
             el_a = doc.createElement('a');
             el_a.href = this.options.moreinfo;
-            el_a.target = '_blank';
             el_a.style.textDecoration = 'none',
             el_a.style.color = this.options.link;
             el_a.innerHTML = this.options.linkmsg;
