@@ -314,7 +314,6 @@
 
             for (var ii = 0; ii < this.inputs.length; ii++) {
                 this.inputs[ii].checked = false;
-                console.info(this.inputs[ii])
             }
 
             if (this.currentQuestion > -1) {
