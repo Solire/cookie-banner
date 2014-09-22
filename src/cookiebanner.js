@@ -601,7 +601,6 @@
             el_a.innerHTML = this.options.linkmsg;
 
             this.info = doc.createElement('span');
-            this.info.style.display = 'none';
             this.info.innerHTML = this.options.message;
             this.info.appendChild(el_a);
 
@@ -613,6 +612,10 @@
                         first = false;
                     }
                 }
+            }
+
+            if (!first) {
+                this.info.style.display = 'none';
             }
             el.appendChild(this.info);
 
