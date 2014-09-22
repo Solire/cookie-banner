@@ -230,6 +230,12 @@
             'pub'      : 4
         },
 
+        agreeReplace : {
+            'audience' : /^(..)(.)()$/,
+            'social'   : /^(.)(.)(.)$/,
+            'pub'      : /^()(.)(..)$/
+        },
+
         agreeMask : {
             'audience' : '..1',
             'social'   : '.1.',
@@ -251,8 +257,7 @@
         },
 
         decodeAllowed : function(code) {
-            var b = '000' + parseInt(code).toString(2);
-            return b.substr(-3);
+            return ('000' + parseInt(code).toString(2)).substr(-3);
         },
 
         isAllowed : function(name, code) {
@@ -657,6 +662,8 @@
 //            }
 
             Utils.on(this.configure, 'click', function(){
+                self.allowed = 0;
+                self.save();
                 self.nextQuestion();
             });
 
