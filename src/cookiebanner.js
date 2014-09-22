@@ -207,6 +207,8 @@
     Cookiebanner.prototype = {
         options : {},
 
+        inputs : [],
+
         // for testing stuff from the outside mostly
         cookiejar: Cookies,
 
@@ -214,9 +216,13 @@
         allowedBinary : '000',
         askBinary     : '000',
 
+        info : null,
+        configure : null,
+        pipe : null,
+
         questions : [],
 
-        currentQuestion : 0,
+        currentQuestion : -1,
 
         agreeValue : {
             'audience' : 1,
@@ -251,10 +257,8 @@
 
         isAllowed : function(name, code) {
             var reg;
-            console.log(name, code)
 
             if (!(name in this.agreeMask)) {
-                console.log("hz")
                 return false;
             }
 
@@ -273,6 +277,9 @@
                 inputNo  = doc.createElement('input'),
                 yes = doc.createTextNode(this.options.yes),
                 no = doc.createTextNode(this.options.no);
+
+            this.inputs.push(inputYes);
+            this.inputs.push(inputNo);
 
             inputYes.type = inputNo.type  = 'radio';
             inputYes.name = inputNo.name  = 'cookiebanner-' + name;
@@ -304,12 +311,27 @@
         },
 
         nextQuestion : function(){
-            this.questions[this.currentQuestion].style.display = 'none';
+
+            for (var ii = 0; ii < this.inputs.length; ii++) {
+                this.inputs[ii].checked = false;
+                console.info(this.inputs[ii])
+            }
+
+            if (this.currentQuestion > -1) {
+               this.questions[this.currentQuestion].style.display = 'none';
+            } else {
+              this.info.style.display = 'none';
+              this.configure.style.display = 'none';
+              this.pipe.style.display = 'none';
+            }
             this.currentQuestion++;
             if (this.questions.length > this.currentQuestion) {
-                this.questions[this.currentQuestion].style.display = 'block';
+                this.questions[this.currentQuestion].style.display = 'inline';
             } else {
-                this.info.style.display = 'block';
+                this.info.style.display = 'inline';
+                this.configure.style.display = 'inline';
+                this.pipe.style.display = 'inline';
+                this.currentQuestion = -1;
             }
         },
 
@@ -399,6 +421,7 @@
                  * on additionne les permissions a demander, donc 0 pour aucune
                  * demande et 7 pour toutes
                  */
+                configure : 'Paramétrer',
                 ask: '0',
                 audience: default_audience,
                 social: default_social,
@@ -465,13 +488,7 @@
         run: function() {
             var self = this;
 
-            if (this.visited()) {
-                this.agree();
-            }
-
             if (!this.agreed()) {
-                this.visit();
-
                 var self = this;
                 contentLoaded(win, function(){
                     self.insert();
@@ -548,7 +565,7 @@
         },
 
         insert: function() {
-            var self = this, zidx, el, el_a, el_x, first = true;
+            var self = this, zidx, el, el_a, el_x;
 
             this.element_mask = this.build_viewport_mask();
 
@@ -598,26 +615,44 @@
             el_a.href = this.options.moreinfo;
             el_a.style.textDecoration = 'none',
             el_a.style.color = this.options.link;
+            el_a.style.padding = '0 5px';
             el_a.innerHTML = this.options.linkmsg;
+
+            this.pipe = doc.createElement('span');
+            this.pipe.style.color = this.options.link;
+            this.pipe.innerHTML = '|';
+
+            this.configure = doc.createElement('span');
+            this.configure.style.cursor = 'pointer';
+            this.configure.style.padding = '0 5px';
+            this.configure.style.color = this.options.link;
+            this.configure.innerHTML = this.options.configure;
 
             this.info = doc.createElement('span');
             this.info.innerHTML = this.options.message;
-            this.info.appendChild(el_a);
+//            this.info.appendChild(el_a);
 
             el.appendChild(el_x);
+            el.appendChild(this.info);
+            console.info(el)
             for (name in this.agreeMask) {
                 if (this.isAllowed(name, this.askBinary)) {
-                    el.appendChild(this.askForm(name, first));
-                    if (first) {
-                        first = false;
-                    }
+                    el.appendChild(this.askForm(name, false));
                 }
             }
 
-            if (!first) {
-                this.info.style.display = 'none';
-            }
-            el.appendChild(this.info);
+
+            el.appendChild(el_a);
+            el.appendChild(this.pipe);
+            el.appendChild(this.configure);
+
+//            if (!first) {
+//                this.info.style.display = 'none';
+//            }
+
+            Utils.on(this.configure, 'click', function(){
+                self.nextQuestion();
+            });
 
             this.element = el;
 
