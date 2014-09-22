@@ -371,6 +371,11 @@
             return true;
         },
 
+        removeCookie: function(value){
+            this.cookiejar.remove(this.options.cookie, this.options.cookiePath);
+            return true;
+        },
+
         init: function(opts) {
             this.inserted = false;
             this.closed = false;
@@ -488,7 +493,7 @@
         run: function() {
             var self = this;
 
-            if (!this.agreed()) {
+            if (!this.agreed() || document.location.href == this.options.moreinfo) {
                 var self = this;
                 contentLoaded(win, function(){
                     self.insert();
@@ -506,6 +511,9 @@
             context.Cookiebanner = {
                 isAllowed : function(name) {
                     return self.isAllowed(name, self.allowedBinary);
+                },
+                reset : function(name) {
+                    return self.removeCookie();
                 }
             }
         },
@@ -634,7 +642,6 @@
 
             el.appendChild(el_x);
             el.appendChild(this.info);
-            console.info(el)
             for (name in this.agreeMask) {
                 if (this.isAllowed(name, this.askBinary)) {
                     el.appendChild(this.askForm(name, false));
