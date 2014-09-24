@@ -1,6 +1,6 @@
 /*global window:false, setTimeout:true, console:true */
 
-(function(context) {
+(function(context){
     'use strict';
 
     var win = context, doc = win.document;
@@ -326,7 +326,9 @@
             } else {
               this.info.style.display = 'none';
               this.configure.style.display = 'none';
-              this.pipe.style.display = 'none';
+              if (this.pipe !== null) {
+                this.pipe.style.display = 'none';
+              }
             }
             this.currentQuestion++;
             if (this.questions.length > this.currentQuestion) {
@@ -334,7 +336,9 @@
             } else {
                 this.info.style.display = 'inline';
                 this.configure.style.display = 'inline';
-                this.pipe.style.display = 'inline';
+                if (this.pipe !== null) {
+                  this.pipe.style.display = 'inline';
+                }
                 this.currentQuestion = -1;
             }
         },
@@ -350,7 +354,7 @@
         visited: function(){
             return this.hasCookie()
                 && this.getCookie() == -1
-                && document.location.href != this.options.moreinfo;
+                && !this.onMoreInfoPage();
         },
 
         agree: function() {
@@ -388,11 +392,17 @@
             /*
              * Default text
              */
-            var default_audience = 'Acceptez-vous d\'être suivi par notre outils de mesure d\'audience';
-            var default_social = 'Acceptez-vous d\'être suivi par notre outils de partage sur les réseaux sociaux';
-            var default_pub = 'Acceptez-vous d\'être suivi par notre outils de publicité';
-            var default_text = 'Nous utilisons des cookies pour améliorer votre expérience. ' +
-                'En poursuivant votre navigation sur ce site, vous acceptez notre utilisation des cookies.';
+            var default_audience = 'Acceptez-vous d\'être suivi(e) par notre'
+                + ' outils de mesure d\'audience ?';
+            var default_social = 'Acceptez-vous d\'être suivi(e) par notre'
+                + ' outils de partage sur les réseaux sociaux ?';
+            var default_pub = 'Acceptez-vous d\'être suivi(e) par nos'
+                + ' fournisseurs de publicité ?';
+            var default_text = 'Nous utilisons des cookies afin d\'établir des'
+                + ' statistiques de fréquentation du site et vous permettre le'
+                + ' partage sur les réseaux sociaux.'
+                + ' En poursuivant votre navigation sur ce site, vous acceptez'
+                + ' notre utilisation des cookies.';
             var default_link = 'En savoir plus';
 
             this.default_options = {
@@ -494,10 +504,14 @@
             }
         },
 
+        onMoreInfoPage: function(){
+            return document.location.href === this.options.moreinfo;
+        },
+
         run: function() {
             var self = this;
 
-            if (!this.agreed() || document.location.href == this.options.moreinfo) {
+            if (!this.agreed() || this.onMoreInfoPage()) {
                 var self = this;
                 contentLoaded(win, function(){
                     self.insert();
@@ -623,16 +637,18 @@
                 self.agree_and_close();
             });
 
-            el_a = doc.createElement('a');
-            el_a.href = this.options.moreinfo;
-            el_a.style.textDecoration = 'none',
-            el_a.style.color = this.options.link;
-            el_a.style.padding = '0 5px';
-            el_a.innerHTML = this.options.linkmsg;
+            if (!this.onMoreInfoPage()) {
+                el_a = doc.createElement('a');
+                el_a.href = this.options.moreinfo;
+                el_a.style.textDecoration = 'none',
+                el_a.style.color = this.options.link;
+                el_a.style.padding = '0 5px';
+                el_a.innerHTML = this.options.linkmsg;
 
-            this.pipe = doc.createElement('span');
-            this.pipe.style.color = this.options.link;
-            this.pipe.innerHTML = '|';
+                this.pipe = doc.createElement('span');
+                this.pipe.style.color = this.options.link;
+                this.pipe.innerHTML = '|';
+            }
 
             this.configure = doc.createElement('span');
             this.configure.style.cursor = 'pointer';
@@ -653,8 +669,10 @@
             }
 
 
-            el.appendChild(el_a);
-            el.appendChild(this.pipe);
+            if (!this.onMoreInfoPage()) {
+                el.appendChild(el_a);
+                el.appendChild(this.pipe);
+            }
             el.appendChild(this.configure);
 
 //            if (!first) {
