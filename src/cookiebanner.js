@@ -157,10 +157,10 @@
             },
 
             /**
-            * "Standardizes" the options keys by converting and removing
-            * any potential "dashed-property-name" into "dashedPropertyName".
-            * In case both are present, the dashedPropertyName wins.
-            */
+             * "Standardizes" the options keys by converting and removing
+             * any potential "dashed-property-name" into "dashedPropertyName".
+             * In case both are present, the dashedPropertyName wins.
+             */
             normalize_keys: function(options_object) {
                 var camelized = {};
                 for (var key in options_object) {
@@ -511,7 +511,13 @@
         run: function() {
             var self = this;
 
+            if (this.visited()) {
+                this.agree();
+            }
+
             if (!this.agreed() || this.onMoreInfoPage()) {
+-               this.visit();
+
                 var self = this;
                 contentLoaded(win, function(){
                     self.insert();
