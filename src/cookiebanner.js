@@ -1,6 +1,6 @@
 /*global window:false, setTimeout:true, console:true */
 
-(function(context) {
+(function(context){
     'use strict';
 
     var win = context, doc = win.document;
@@ -55,167 +55,355 @@
     }
 
     var Cookies = {
-        get: function (key) {
-            return decodeURIComponent(doc.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
-        },
-        set: function (key, val, end, path, domain, secure) {
-            if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) {
-                return false;
-            }
-            var expires = '';
-            if (end) {
-                switch (end.constructor) {
-                    case Number:
-                        expires = end === Infinity ? '; expires=Fri, 31 Dec 9999 23:59:59 GMT' : '; max-age=' + end;
-                        break;
-                    case String:
-                        expires = '; expires=' + end;
-                    break;
-                    case Date:
-                        expires = '; expires=' + end.toUTCString();
-                    break;
+            get: function (key) {
+                return decodeURIComponent(doc.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
+            },
+            set: function (key, val, end, path, domain, secure) {
+                if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) {
+                    return false;
                 }
-            }
-            doc.cookie = encodeURIComponent(key) + '=' + encodeURIComponent(val) + expires + (domain ? '; domain=' + domain : '') + (path ? '; path=' + path : '') + (secure ? '; secure' : '');
-            return true;
-        },
-        has: function (key) {
-            return (new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=')).test(doc.cookie);
-        },
-        remove: function (key, path, domain) {
-            if (!key || !this.has(key)) { return false; }
-            doc.cookie = encodeURIComponent(key) + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' + ( domain ? '; domain=' + domain : '') + ( path ? '; path=' + path : '');
-            return true;
-        }
-    };
-
-    var Utils = {
-
-        // merge objects and whatnot
-        merge: function(){
-            var obj = {},
-                i = 0,
-                al = arguments.length,
-                key;
-            if (0 === al) {
-                return obj;
-            }
-            for (; i < al; i++) {
-                for (key in arguments[i]) {
-                    if (Object.prototype.hasOwnProperty.call(arguments[i], key)) {
-                        obj[key] = arguments[i][key];
+                var expires = '';
+                if (end) {
+                    switch (end.constructor) {
+                        case Number:
+                            expires = end === Infinity ? '; expires=Fri, 31 Dec 9999 23:59:59 GMT' : '; max-age=' + end;
+                            break;
+                        case String:
+                            expires = '; expires=' + end;
+                        break;
+                        case Date:
+                            expires = '; expires=' + end.toUTCString();
+                        break;
                     }
                 }
+                doc.cookie = encodeURIComponent(key) + '=' + encodeURIComponent(val) + expires + (domain ? '; domain=' + domain : '') + (path ? '; path=' + path : '') + (secure ? '; secure' : '');
+                return true;
+            },
+            has: function (key) {
+                return (new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=')).test(doc.cookie);
+            },
+            remove: function (key, path, domain) {
+                if (!key || !this.has(key)) { return false; }
+                doc.cookie = encodeURIComponent(key) + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' + ( domain ? '; domain=' + domain : '') + ( path ? '; path=' + path : '');
+                return true;
             }
-            return obj;
         },
+        Utils = {
+            on: function(el, ev, fn) {
+                var add = el.addEventListener ? 'addEventListener' : 'attachEvent',
+                    pre = el.addEventListener ? '' : 'on';
+                el[add](pre + ev, fn, false);
+            },
 
-        str2bool: function(str) {
-            str = '' + str;
-            switch (str.toLowerCase()) {
-                case 'false':
-                case 'no':
-                case '0':
-                case '':
-                    return false;
-                default:
-                    return true;
+            // merge objects and whatnot
+            merge: function(){
+                var obj = {},
+                    i = 0,
+                    al = arguments.length,
+                    key;
+                if (0 === al) {
+                    return obj;
                 }
-        },
-
-        fade_in: function(el) {
-            if (el.style.opacity < 1) {
-                el.style.opacity = (parseFloat(el.style.opacity) + 0.05).toFixed(2);
-                win.setTimeout(function(){
-                    Utils.fade_in(el);
-                }, 50);
-            }
-        },
-
-        get_data_attribs: function(script) {
-            var data = {};
-            if (Object.prototype.hasOwnProperty.call(script, 'dataset')) {
-                data = script.dataset;
-            } else {
-                var attribs = script.attributes;
-                var key;
-                for (key in attribs) {
-                    if (Object.prototype.hasOwnProperty.call(attribs, key)) {
-                        var attr = attribs[key];
-                        if (/^data-/.test(attr.name)) {
-                            var camelized = Utils.camelize(attr.name.substr(5));
-                            data[camelized] = attr.value;
+                for (; i < al; i++) {
+                    for (key in arguments[i]) {
+                        if (Object.prototype.hasOwnProperty.call(arguments[i], key)) {
+                            obj[key] = arguments[i][key];
                         }
                     }
                 }
-            }
-            return data;
-        },
+                return obj;
+            },
 
-        /**
-        * "Standardizes" the options keys by converting and removing
-        * any potential "dashed-property-name" into "dashedPropertyName".
-        * In case both are present, the dashedPropertyName wins.
-        */
-        normalize_keys: function(options_object) {
-            var camelized = {};
-            for (var key in options_object) {
-                if (Object.prototype.hasOwnProperty.call(options_object, key)) {
-                    var camelized_key = Utils.camelize(key);
-                    // TODO: could this break for "falsy" values within options_object?
-                    // avoiding "dashed-property-name" overriding a potentially existing "dashedPropertyName"
-                    camelized[camelized_key] = options_object[camelized_key] ? options_object[camelized_key] : options_object[key];
+            str2bool: function(str) {
+                str = '' + str;
+                switch (str.toLowerCase()) {
+                    case 'false':
+                    case 'no':
+                    case '0':
+                    case '':
+                        return false;
+                    default:
+                        return true;
+                    }
+            },
+
+            fade_in: function(el) {
+                if (el.style.opacity < 1) {
+                    el.style.opacity = (parseFloat(el.style.opacity) + 0.05).toFixed(2);
+                    win.setTimeout(function(){
+                        Utils.fade_in(el);
+                    }, 50);
                 }
-            }
-            return camelized;
-        },
+            },
 
-        camelize: function(str) {
-            var separator = '-',
-                match = str.indexOf(separator);
-            while (match != -1) {
-                var last = (match === (str.length - 1)),
-                    next = last ? '' : str[match + 1],
-                    upnext = next.toUpperCase(),
-                    sep_substr =  last ? separator : separator + next;
-                str = str.replace(sep_substr, upnext);
-                match = str.indexOf(separator);
-            }
-            return str;
-        },
-
-        find_script_by_id: function(id) {
-            var scripts = doc.getElementsByTagName('script');
-            for (var i = 0, l = scripts.length; i < l; i++) {
-                if (id === scripts[i].id) {
-                    return scripts[i];
+            get_data_attribs: function(script) {
+                var data = {};
+                if (Object.prototype.hasOwnProperty.call(script, 'dataset')) {
+                    data = script.dataset;
+                } else {
+                    var attribs = script.attributes;
+                    var key;
+                    for (key in attribs) {
+                        if (Object.prototype.hasOwnProperty.call(attribs, key)) {
+                            var attr = attribs[key];
+                            if (/^data-/.test(attr.name)) {
+                                var camelized = Utils.camelize(attr.name.substr(5));
+                                data[camelized] = attr.value;
+                            }
+                        }
+                    }
                 }
+                return data;
+            },
+
+            /**
+             * "Standardizes" the options keys by converting and removing
+             * any potential "dashed-property-name" into "dashedPropertyName".
+             * In case both are present, the dashedPropertyName wins.
+             */
+            normalize_keys: function(options_object) {
+                var camelized = {};
+                for (var key in options_object) {
+                    if (Object.prototype.hasOwnProperty.call(options_object, key)) {
+                        var camelized_key = Utils.camelize(key);
+                        // TODO: could this break for "falsy" values within options_object?
+                        // avoiding "dashed-property-name" overriding a potentially existing "dashedPropertyName"
+                        camelized[camelized_key] = options_object[camelized_key] ? options_object[camelized_key] : options_object[key];
+                    }
+                }
+                return camelized;
+            },
+
+            camelize: function(str) {
+                var separator = '-',
+                    match = str.indexOf(separator);
+                while (match != -1) {
+                    var last = (match === (str.length - 1)),
+                        next = last ? '' : str[match + 1],
+                        upnext = next.toUpperCase(),
+                        sep_substr =  last ? separator : separator + next;
+                    str = str.replace(sep_substr, upnext);
+                    match = str.indexOf(separator);
+                }
+                return str;
+            },
+
+            find_script_by_id: function(id) {
+                var scripts = doc.getElementsByTagName('script');
+                for (var i = 0, l = scripts.length; i < l; i++) {
+                    if (id === scripts[i].id) {
+                        return scripts[i];
+                    }
+                }
+                return null;
             }
-            return null;
-        }
 
-    };
-
-    var script_el_invoker = Utils.find_script_by_id('cookiebanner');
-
-    var Cookiebanner = context.Cookiebanner = function(opts) {
+        },
+        script_el_invoker = Utils.find_script_by_id('cookiebanner'),
+        Cookiebanner = function(opts) {
         this.init(opts);
     };
 
     Cookiebanner.prototype = {
+        options : {},
+
+        inputs : [],
 
         // for testing stuff from the outside mostly
         cookiejar: Cookies,
 
-        init: function(opts) {
+        allowed       : 0,
+        allowedBinary : '000',
+        askBinary     : '000',
 
+        info : null,
+        configure : null,
+        pipe : null,
+
+        questions : [],
+
+        currentQuestion : -1,
+
+        agreeValue : {
+            'audience' : 1,
+            'social'   : 2,
+            'pub'      : 4
+        },
+
+        agreeReplace : {
+            'audience' : /^(..)(.)()$/,
+            'social'   : /^(.)(.)(.)$/,
+            'pub'      : /^()(.)(..)$/
+        },
+
+        agreeMask : {
+            'audience' : '..1',
+            'social'   : '.1.',
+            'pub'      : '1..'
+        },
+
+        add: function(name){
+            this.allowed += this.agreeValue[name];
+            this.save();
+        },
+
+        set: function(value){
+            this.allowed = value;
+            this.save();
+        },
+
+        save: function(){
+            this.setCookie(this.allowed);
+        },
+
+        decodeAllowed : function(code) {
+            return ('000' + parseInt(code).toString(2)).substr(-3);
+        },
+
+        isAllowed : function(name, code) {
+            var reg;
+
+            if (!(name in this.agreeMask)) {
+                return false;
+            }
+
+            reg = new RegExp(this.agreeMask[name]);
+
+            return reg.test(code);
+        },
+
+        askForm: function(name, visible){
+            var self = this,
+                wrap = doc.createElement('span'),
+                q = doc.createTextNode(this.options[name]),
+                labelYes = doc.createElement('label'),
+                labelNo = doc.createElement('label'),
+                inputYes = doc.createElement('input'),
+                inputNo  = doc.createElement('input'),
+                yes = doc.createTextNode(this.options.yes),
+                no = doc.createTextNode(this.options.no);
+
+            this.inputs.push(inputYes);
+            this.inputs.push(inputNo);
+
+            inputYes.type = inputNo.type  = 'radio';
+            inputYes.name = inputNo.name  = 'cookiebanner-' + name;
+
+            Utils.on(inputYes, 'change', function(){
+                self.nextQuestion();
+                self.add(name);
+            });
+            Utils.on(inputNo, 'change', function(){
+                self.nextQuestion();
+                self.save();
+            });
+
+            labelYes.appendChild(inputYes);
+            labelYes.appendChild(yes);
+            labelNo.appendChild(inputNo);
+            labelNo.appendChild(no);
+
+            if (!visible) {
+                wrap.style.display = 'none';
+            }
+            wrap.appendChild(q);
+            wrap.appendChild(labelYes);
+            wrap.appendChild(labelNo);
+
+            this.questions.push(wrap);
+
+            return wrap;
+        },
+
+        nextQuestion : function(){
+
+            for (var ii = 0; ii < this.inputs.length; ii++) {
+                this.inputs[ii].checked = false;
+            }
+
+            if (this.currentQuestion > -1) {
+               this.questions[this.currentQuestion].style.display = 'none';
+            } else {
+              this.info.style.display = 'none';
+              this.configure.style.display = 'none';
+              if (this.pipe !== null) {
+                this.pipe.style.display = 'none';
+              }
+            }
+            this.currentQuestion++;
+            if (this.questions.length > this.currentQuestion) {
+                this.questions[this.currentQuestion].style.display = 'inline';
+            } else {
+                this.info.style.display = 'inline';
+                this.configure.style.display = 'inline';
+                if (this.pipe !== null) {
+                  this.pipe.style.display = 'inline';
+                }
+                this.currentQuestion = -1;
+            }
+        },
+
+        visit: function() {
+            /*
+             * On dépose un cookie pour la première visite valable 5 min
+             */
+            this.cookiejar.set(this.options.cookie, -1, 300, this.options.cookiePath);
+            return true;
+        },
+
+        visited: function(){
+            return this.hasCookie()
+                && this.getCookie() == -1
+                && !this.onMoreInfoPage();
+        },
+
+        agree: function() {
+            this.set(7);
+            return true;
+        },
+
+        agreed: function(){
+            return this.getCookie() > -1;
+        },
+
+        hasCookie: function(){
+            return this.cookiejar.has(this.options.cookie);
+        },
+
+        getCookie: function(){
+            return parseInt(this.cookiejar.get(this.options.cookie));
+        },
+
+        setCookie: function(value){
+            this.cookiejar.set(this.options.cookie, value, this.options.expires, this.options.cookiePath);
+            return true;
+        },
+
+        removeCookie: function(value){
+            this.cookiejar.remove(this.options.cookie, this.options.cookiePath);
+            return true;
+        },
+
+        init: function(opts) {
             this.inserted = false;
             this.closed = false;
             this.test_mode = false; // TODO: implement
 
-            var default_text = 'We use cookies to enhance your experience. ' +
-                'By continuing to visit this site you agree to our use of cookies.';
-            var default_link = 'Learn more';
+            /*
+             * Default text
+             */
+            var default_audience = 'Acceptez-vous d\'être suivi(e) par notre'
+                + ' outils de mesure d\'audience ?';
+            var default_social = 'Acceptez-vous d\'être suivi(e) par notre'
+                + ' outils de partage sur les réseaux sociaux ?';
+            var default_pub = 'Acceptez-vous d\'être suivi(e) par nos'
+                + ' fournisseurs de publicité ?';
+            var default_text = 'Nous utilisons des cookies afin d\'établir des'
+                + ' statistiques de fréquentation du site et vous permettre le'
+                + ' partage sur les réseaux sociaux.'
+                + ' En poursuivant votre navigation sur ce site, vous acceptez'
+                + ' notre utilisation des cookies.';
+            var default_link = 'En savoir plus';
 
             this.default_options = {
                 // autorun: true,
@@ -223,7 +411,12 @@
                 closeText: '&#10006;',
                 cookiePath: '/',
                 debug: false,
-                expires: Infinity,
+                expires: function(){
+                    var x = 13,
+                        CurrentDate = new Date();
+                    CurrentDate.setMonth(CurrentDate.getMonth() + x);
+                    return CurrentDate;
+                },
                 zindex: 255,
                 mask: false,
                 maskOpacity: 0.5,
@@ -237,6 +430,24 @@
                 message: default_text,
                 linkmsg: default_link,
                 moreinfo: 'http://aboutcookies.org',
+
+                /*
+                 * Valeur pour savoir quelles permissions demandées
+                 * 1 : audience
+                 * 2 : social
+                 * 4 : publicité
+                 *
+                 * on additionne les permissions a demander, donc 0 pour aucune
+                 * demande et 7 pour toutes
+                 */
+                configure : 'Paramétrer',
+                ask: '0',
+                audience: default_audience,
+                social: default_social,
+                pub: default_pub,
+                yes: 'Oui',
+                no: 'Non',
+
                 effect: null,
                 fontSize: '14px',
                 fontFamily: 'arial, sans-serif',
@@ -293,12 +504,41 @@
             }
         },
 
+        onMoreInfoPage: function(){
+            return document.location.href === this.options.moreinfo;
+        },
+
         run: function() {
-            if (!this.agreed()) {
+            var self = this;
+
+            if (this.visited()) {
+                this.agree();
+            }
+
+            if (!this.agreed() || this.onMoreInfoPage()) {
+-               this.visit();
+
                 var self = this;
                 contentLoaded(win, function(){
                     self.insert();
                 });
+            }
+
+            this.askBinary = this.decodeAllowed(this.options.ask);
+            if (this.hasCookie() && this.getCookie() > -1) {
+                this.allowed = this.getCookie();
+            } else {
+                this.allowed = 0;
+            }
+            this.allowedBinary = this.decodeAllowed(this.allowed);
+
+            context.Cookiebanner = {
+                isAllowed : function(name) {
+                    return self.isAllowed(name, self.allowedBinary);
+                },
+                reset : function(name) {
+                    return self.removeCookie();
+                }
             }
         },
 
@@ -317,15 +557,6 @@
                 mask = el.firstChild;
             }
             return mask;
-        },
-
-        agree: function() {
-            this.cookiejar.set(this.options.cookie, 1, this.options.expires, this.options.cookiePath);
-            return true;
-        },
-
-        agreed: function(){
-            return this.cookiejar.has(this.options.cookie);
         },
 
         close: function() {
@@ -366,16 +597,18 @@
         },
 
         insert: function() {
+            var self = this, zidx, el, el_a, el_x;
+
             this.element_mask = this.build_viewport_mask();
 
-            var zidx = this.options.zindex;
+            zidx = this.options.zindex;
 
             if (this.element_mask) {
                 // bump notice element's zindex so it's above the mask
                 zidx += 1;
             }
 
-            var el = doc.createElement('div');
+            el = doc.createElement('div');
             el.className = 'cookiebanner';
             el.style.position = 'fixed';
             el.style.left = 0;
@@ -386,9 +619,7 @@
             el.style.background = this.options.bg;
             el.style.color = this.options.fg;
             el.style.lineHeight = el.style.minHeight;
-
             el.style.padding = '5px 16px';
-
             el.style.fontFamily = this.options.fontFamily;
             el.style.fontSize = this.options.fontSize;
 
@@ -398,38 +629,77 @@
                 el.style.bottom = 0;
             }
 
-            el.innerHTML = '<div class="cookiebanner-close" style="float:right;padding-left:5px;">' +
-                this.options.closeText + '</div>' +
-                '<span>' + this.options.message + ' <a>' + this.options.linkmsg + '</a></span>';
+            /*
+             * Génération du html
+             */
 
-            this.element = el;
-
-            var el_a = el.getElementsByTagName('a')[0];
-            el_a.href = this.options.moreinfo;
-            el_a.target = '_blank';
-            el_a.style.textDecoration = 'none';
-            el_a.style.color = this.options.link;
-
-            var el_x = el.getElementsByTagName('div')[0];
+            el_x = doc.createElement('div');
+            el_x.className = 'cookiebanner-close';
             el_x.style.cursor = 'pointer';
-
-            function on(el, ev, fn) {
-                var add = el.addEventListener ? 'addEventListener' : 'attachEvent',
-                    pre = el.addEventListener ? '' : 'on';
-                el[add](pre + ev, fn, false);
-            }
-
-            var self = this;
-            on(el_x, 'click', function(){
+            el_x.style.cssFloat = 'right';
+            el_x.style.paddingLeft = '5px';
+            el_x.innerHTML = this.options.closeText;
+            Utils.on(el_x, 'click', function(){
                 self.agree_and_close();
             });
 
+            if (!this.onMoreInfoPage()) {
+                el_a = doc.createElement('a');
+                el_a.href = this.options.moreinfo;
+                el_a.style.textDecoration = 'none',
+                el_a.style.color = this.options.link;
+                el_a.style.padding = '0 5px';
+                el_a.innerHTML = this.options.linkmsg;
+
+                this.pipe = doc.createElement('span');
+                this.pipe.style.color = this.options.link;
+                this.pipe.innerHTML = '|';
+            }
+
+            this.configure = doc.createElement('span');
+            this.configure.style.cursor = 'pointer';
+            this.configure.style.padding = '0 5px';
+            this.configure.style.color = this.options.link;
+            this.configure.innerHTML = this.options.configure;
+
+            this.info = doc.createElement('span');
+            this.info.innerHTML = this.options.message;
+//            this.info.appendChild(el_a);
+
+            el.appendChild(el_x);
+            el.appendChild(this.info);
+            for (name in this.agreeMask) {
+                if (this.isAllowed(name, this.askBinary)) {
+                    el.appendChild(this.askForm(name, false));
+                }
+            }
+
+
+            if (!this.onMoreInfoPage()) {
+                el.appendChild(el_a);
+                el.appendChild(this.pipe);
+            }
+            el.appendChild(this.configure);
+
+//            if (!first) {
+//                this.info.style.display = 'none';
+//            }
+
+            Utils.on(this.configure, 'click', function(){
+                self.allowed = 0;
+                self.save();
+                self.nextQuestion();
+            });
+
+            this.element = el;
+
             if (this.element_mask) {
-                on(this.element_mask, 'click', function(){
+                Utils.on(this.element_mask, 'click', function(){
                     self.agree_and_close();
                 });
                 doc.body.appendChild(this.element_mask);
             }
+
 
             doc.body.appendChild(this.element);
             this.inserted = true;
@@ -441,7 +711,6 @@
                 this.element.style.opacity = 1;
             }
         }
-
     };
 
     if (script_el_invoker) {
