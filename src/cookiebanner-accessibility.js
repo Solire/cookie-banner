@@ -428,7 +428,9 @@
       } else {
         this.info.style.display = 'none';
         this.info.setAttribute('aria-hidden', true);
-        this.a.tabIndex = -1;
+        if (this.a !== null) {
+          this.a.tabIndex = -1;
+        }
         this.configure.tabIndex = -1;
       }
 
@@ -449,7 +451,9 @@
       } else {
         this.info.style.display = 'inline';
         this.info.setAttribute('aria-hidden', false);
-        this.a.tabIndex = 0;
+        if (this.a !== null) {
+          this.a.tabIndex = 0;
+        }
         this.configure.tabIndex = 1;
 
         this.currentStep = -1;
