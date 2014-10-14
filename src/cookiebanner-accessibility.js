@@ -314,7 +314,7 @@
       this.focusable.push(focusable);
 
       validate.type = 'button';
-      validate.value = 'OK';
+      validate.value = this.options.ok;
       validate.style.background = 'none repeat scroll 0 0 #000';
       validate.style.border = '1px solid ' + this.options.fg;
       validate.style.color = this.options.fg;
@@ -379,7 +379,7 @@
           focusable = [];
 
       validate.type = 'button';
-      validate.value = 'OK';
+      validate.value = this.options.continue;
       validate.style.background = 'none repeat scroll 0 0 transparent';
       validate.style.border = '1px solid ' + this.options.fg;
       validate.style.color = this.options.fg;
@@ -445,16 +445,22 @@
           this.inputs[this.currentStep][ii].checked = false;
         }
 
+        if (this.focusable[this.currentStep].length > 0) {
+          this.focusable[this.currentStep][0].focus();
+        }
         for (jj = 0; jj < this.focusable[this.currentStep].length; jj++) {
-          this.focusable[this.currentStep][jj].tabIndex = ii;
+          this.focusable[this.currentStep][jj].tabIndex = 0;
         }
       } else {
         this.info.style.display = 'inline';
         this.info.setAttribute('aria-hidden', false);
         if (this.a !== null) {
           this.a.tabIndex = 0;
+          this.a.focus();
+        } else {
+          this.configure.focus();
         }
-        this.configure.tabIndex = 1;
+        this.configure.tabIndex = 0;
 
         this.currentStep = -1;
       }
@@ -510,30 +516,36 @@
        * Default text
        */
       var default_audience = 'Acceptez-vous d\'être suivi(e) par notre '
-          + 'outils de mesure d\'audience ?';
-      var default_social = 'Acceptez-vous d\'être suivi(e) par notre '
-          + 'outils de partage sur les réseaux sociaux ?';
-      var default_pub = 'Acceptez-vous d\'être suivi(e) par nos '
-          + 'fournisseurs de publicité ?';
-      var default_audienceAnswer = 'Votre paramétrage sur les outils de mesure '
-          + 'd\'audience a été enregistré.';
-      var default_socialAnswer = 'Votre paramétrage sur les outils de partage '
-          + 'sur les réseaux sociaux.';
-      var default_pubAnswer = 'Votre paramétrage sur le suivi de nos '
-          + 'fournisseurs de publicité.';
+          + 'outils de mesure d\'audience ?',
+          default_social = 'Acceptez-vous d\'être suivi(e) par notre '
+          + 'outils de partage sur les réseaux sociaux ?',
+          default_pub = 'Acceptez-vous d\'être suivi(e) par nos '
+          + 'fournisseurs de publicité ?',
+          default_audienceAnswer = 'Votre paramétrage sur les outils de mesure '
+          + 'd\'audience a été enregistré.',
+          default_socialAnswer = 'Votre paramétrage sur les outils de partage '
+          + 'sur les réseaux sociaux.',
+          default_pubAnswer = 'Votre paramétrage sur le suivi de nos '
+          + 'fournisseurs de publicité.',
 
+          default_linkTitle = 'Consulter la page concernant les Cookies.',
+          default_closeTitle = 'Fermer le bandeau et accepter les Cookies.',
+          default_configureTitle = 'Paramétrer l\'acceptation des Cookies.',
 
-      var default_text = 'Nous utilisons des cookies afin d\'établir des'
+          default_text = 'Nous utilisons des cookies afin d\'établir des'
           + ' statistiques de fréquentation du site et vous permettre le'
           + ' partage sur les réseaux sociaux.'
           + ' En poursuivant votre navigation sur ce site, vous acceptez'
-          + ' notre utilisation des cookies.';
-      var default_link = 'En savoir plus';
+          + ' notre utilisation des cookies.',
+
+          default_link = 'En savoir plus',
+
+          default_quitTitle = 'Quitter le paramétrage';
 
       this.default_options = {
         // autorun: true,
         cookie: 'cookiebanner-accepted',
-        closeText: '&#10006;',
+        closeText: '✖',
         cookiePath: '/',
         debug: false,
         expires: function(){
@@ -552,9 +564,30 @@
         fg: '#ddd',
         link: '#aaa',
         position: 'bottom',
+        moreinfo: 'http://aboutcookies.org',
+
         message: default_text,
         linkmsg: default_link,
-        moreinfo: 'http://aboutcookies.org',
+        linkTitle: default_linkTitle,
+        closeTitle: default_closeTitle,
+
+        ok : 'Valider',
+        continue : 'Continuer',
+
+        configure : 'Paramétrer',
+        configureTitle: default_configureTitle,
+
+        quit: 'Quitter',
+        quitTitle: default_quitTitle,
+
+        audience: default_audience,
+        audienceAnswer: default_audienceAnswer,
+        social: default_social,
+        socialAnswer: default_socialAnswer,
+        pub: default_pub,
+        pubAnswer: default_pubAnswer,
+        yes: 'Oui',
+        no: 'Non',
 
         /*
          * Valeur pour savoir quelles permissions demandées
@@ -565,16 +598,7 @@
          * on additionne les permissions a demander, donc 0 pour aucune
          * demande et 7 pour toutes
          */
-        configure : 'Paramétrer',
         ask: '0',
-        audience: default_audience,
-        audienceAnswer: default_audienceAnswer,
-        social: default_social,
-        socialAnswer: default_socialAnswer,
-        pub: default_pub,
-        pubAnswer: default_pubAnswer,
-        yes: 'Oui',
-        no: 'Non',
 
         effect: null,
         fontSize: '14px',
@@ -725,7 +749,7 @@
     },
 
     insert: function() {
-      var self = this, zidx, el, el_x, pipe;
+      var self = this, zidx, el_x, pipe;
 
       this.element_mask = this.build_viewport_mask();
 
@@ -736,37 +760,46 @@
         zidx += 1;
       }
 
-      el = doc.createElement('div');
-      el.className = 'cookiebanner';
-      el.style.position = 'fixed';
-      el.style.left = 0;
-      el.style.right = 0;
-      el.style.height = this.options.height;
-      el.style.minHeight = this.options.minHeight;
-      el.style.zIndex = zidx;
-      el.style.background = this.options.bg;
-      el.style.color = this.options.fg;
-      el.style.lineHeight = el.style.minHeight;
-      el.style.padding = '5px 16px';
-      el.style.fontFamily = this.options.fontFamily;
-      el.style.fontSize = this.options.fontSize;
+      this.element = doc.createElement('div');
+      this.element.className = 'cookiebanner';
+      this.element.style.position = 'fixed';
+      this.element.style.left = 0;
+      this.element.style.right = 0;
+      this.element.style.height = this.options.height;
+      this.element.style.minHeight = this.options.minHeight;
+      this.element.style.zIndex = zidx;
+      this.element.style.background = this.options.bg;
+      this.element.style.color = this.options.fg;
+      this.element.style.lineHeight = this.element.style.minHeight;
+      this.element.style.padding = '5px 16px';
+      this.element.style.fontFamily = this.options.fontFamily;
+      this.element.style.fontSize = this.options.fontSize;
 
       if ('top' === this.options.position) {
-        el.style.top = 0;
+        this.element.style.top = 0;
       } else {
-        el.style.bottom = 0;
+        this.element.style.bottom = 0;
       }
 
       /*
        * Génération du html
        */
 
-      el_x = doc.createElement('div');
-      el_x.className = 'cookiebanner-close';
+      el_x = doc.createElement('input');
+      el_x.type = 'button';
+      el_x.title = this.options.closeTitle;
+      el_x.value = this.options.closeText;
+
+      el_x.tabIndex = 0;
+
       el_x.style.cursor = 'pointer';
+      el_x.style.padding = '5px';
+      el_x.style.background = 'none repeat scroll 0 0 #000';
+      el_x.style.border = 'medium none';
       el_x.style.cssFloat = 'right';
-      el_x.style.paddingLeft = '5px';
-      el_x.innerHTML = this.options.closeText;
+      el_x.style.color = this.options.link;
+
+      el_x.className = 'cookiebanner-close';
       Utils.on(el_x, 'click', function(){
         self.agree_and_close();
       });
@@ -774,8 +807,19 @@
       this.info = doc.createElement('span');
       this.info.innerHTML = this.options.message;
 
+      this.configure = doc.createElement('input');
+      this.configure.type = 'button';
+      this.configure.title = this.options.configureTitle;
+      this.configure.style.cursor = 'pointer';
+      this.configure.style.padding = '0 5px';
+      this.configure.style.background = 'none repeat scroll 0 0 #000';
+      this.configure.style.border = 'medium none';
+      this.configure.style.color = this.options.link;
+      this.configure.value = this.options.configure;
+
       if (!this.onMoreInfoPage()) {
         this.a = doc.createElement('a');
+        this.a.title = this.options.linkTitle;
         this.a.href = this.options.moreinfo;
         this.a.style.textDecoration = 'none',
         this.a.style.color = this.options.link;
@@ -790,33 +834,22 @@
         this.info.appendChild(pipe);
       }
 
-      this.configure = doc.createElement('input');
-      this.configure.type = 'button';
-      this.configure.style.cursor = 'pointer';
-      this.configure.style.padding = '0 5px';
-      this.configure.style.background = 'none repeat scroll 0 0 #000';
-      this.configure.style.border = 'medium none';
-      this.configure.style.color = this.options.link;
-      this.configure.value = this.options.configure;
-
       this.info.appendChild(this.configure);
 
-      el.appendChild(el_x);
-      el.appendChild(this.info);
+      this.element.appendChild(this.info);
       for (name in this.agreeMask) {
         if (this.isAllowed(name, this.askBinary)) {
-          el.appendChild(this.addQuestion(name));
-          el.appendChild(this.addAnswer(name));
+          this.element.appendChild(this.addQuestion(name));
+          this.element.appendChild(this.addAnswer(name));
         }
       }
+      this.element.appendChild(el_x);
 
       Utils.on(this.configure, 'click', function(){
         self.allowed = 0;
         self.save();
         self.nextStep();
       });
-
-      this.element = el;
 
       if (this.element_mask) {
         Utils.on(this.element_mask, 'click', function(){
@@ -827,6 +860,15 @@
 
       doc.body.insertBefore(this.element, doc.body.children[0]);
       this.inserted = true;
+
+      if (!this.onMoreInfoPage()) {
+        this.a.focus();
+        this.a.tabIndex = 0;
+        this.configure.tabIndex = 0;
+      } else {
+        this.configure.focus();
+        this.configure.tabIndex = 0;
+      }
 
       if ('fade' === this.options.effect) {
         this.element.style.opacity = 0;
