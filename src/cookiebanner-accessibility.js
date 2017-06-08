@@ -564,7 +564,8 @@
         fg: '#ddd',
         link: '#aaa',
         position: 'bottom',
-        moreinfo: 'http://aboutcookies.org',
+        moreinfo: false,
+        canconfigure: true,
 
         message: default_text,
         linkmsg: default_link,
@@ -611,6 +612,7 @@
 
       if (this.script_el) {
         var data_options = Utils.get_data_attribs(this.script_el);
+        console.log(data_options);
         this.options = Utils.merge(this.options, data_options);
       }
 
@@ -807,17 +809,7 @@
       this.info = doc.createElement('span');
       this.info.innerHTML = this.options.message;
 
-      this.configure = doc.createElement('input');
-      this.configure.type = 'button';
-      this.configure.title = this.options.configureTitle;
-      this.configure.style.cursor = 'pointer';
-      this.configure.style.padding = '0 5px';
-      this.configure.style.background = 'none repeat scroll 0 0 #000';
-      this.configure.style.border = 'medium none';
-      this.configure.style.color = this.options.link;
-      this.configure.value = this.options.configure;
-
-      if (!this.onMoreInfoPage()) {
+      if (this.options.moreinfo && !this.onMoreInfoPage()) {
         this.a = doc.createElement('a');
         this.a.title = this.options.linkTitle;
         this.a.href = this.options.moreinfo;
@@ -834,7 +826,19 @@
         this.info.appendChild(pipe);
       }
 
-      this.info.appendChild(this.configure);
+      if (this.options.canconfigure) {
+        this.configure = doc.createElement('input');
+        this.configure.type = 'button';
+        this.configure.title = this.options.configureTitle;
+        this.configure.style.cursor = 'pointer';
+        this.configure.style.padding = '0 5px';
+        this.configure.style.background = 'none repeat scroll 0 0 #000';
+        this.configure.style.border = 'medium none';
+        this.configure.style.color = this.options.link;
+        this.configure.value = this.options.configure;
+
+        this.info.appendChild(this.configure);
+      }
 
       this.element.appendChild(this.info);
       for (name in this.agreeMask) {
@@ -845,11 +849,13 @@
       }
       this.element.appendChild(el_x);
 
-      Utils.on(this.configure, 'click', function(){
-        self.allowed = 0;
-        self.save();
-        self.nextStep();
-      });
+      if (this.options.canconfigure) {
+        Utils.on(this.configure, 'click', function(){
+          self.allowed = 0;
+          self.save();
+          self.nextStep();
+        });
+      }
 
       if (this.element_mask) {
         Utils.on(this.element_mask, 'click', function(){
@@ -861,13 +867,15 @@
       doc.body.insertBefore(this.element, doc.body.children[0]);
       this.inserted = true;
 
-      if (!this.onMoreInfoPage()) {
-        this.a.focus();
-        this.a.tabIndex = 0;
-        this.configure.tabIndex = 0;
-      } else {
-        this.configure.focus();
-        this.configure.tabIndex = 0;
+      if (this.options.moreinfo) {
+        if (!this.onMoreInfoPage()) {
+          this.a.focus();
+          this.a.tabIndex = 0;
+          this.configure.tabIndex = 0;
+        } else {
+          this.configure.focus();
+          this.configure.tabIndex = 0;
+        }
       }
 
       if ('fade' === this.options.effect) {
