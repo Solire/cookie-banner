@@ -612,7 +612,6 @@
 
       if (this.script_el) {
         var data_options = Utils.get_data_attribs(this.script_el);
-        console.log(data_options);
         this.options = Utils.merge(this.options, data_options);
       }
 
