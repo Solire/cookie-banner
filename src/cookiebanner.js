@@ -453,8 +453,6 @@
         step.style.display = 'inline';
         step.setAttribute('aria-hidden', false);
 
-        console.log('aaa', this.inputs[this.currentStep])
-
         for (ii = 0; ii < this.inputs[this.currentStep].length; ii++) {
           this.inputs[this.currentStep][ii].checked = false;
         }
