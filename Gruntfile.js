@@ -23,7 +23,6 @@ module.exports = function (grunt) {
       my_target: {
         files: {
           'dist/cookiebanner.min.js': ['src/cookiebanner.js'],
-          'dist/cookiebanner-accessibility.min.js': ['src/cookiebanner-accessibility.js']
         }
       }
     },
@@ -35,5 +34,5 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.registerTask('build', ['uglify', 'copy']);
+  grunt.registerTask('default', ['uglify', 'copy']);
 };
