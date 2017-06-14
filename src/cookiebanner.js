@@ -269,41 +269,41 @@
     addQuestion: function(name){
       var
         self = this,
-        wrap = doc.createElement('div'),
+        wrap,
         form = doc.createElement('form'),
         q = doc.createTextNode(this.options[name]),
-        labelYes = doc.createElement('label'),
-        labelNo = doc.createElement('label'),
-        inputYes = doc.createElement('input'),
-        inputNo  = doc.createElement('input'),
-        divYes = doc.createElement('div'),
-        divNo = doc.createElement('div'),
-        validate = doc.createElement('input'),
-        validateDiv = doc.createElement('div'),
+        labelYes,
+        labelNo,
+        inputYes,
+        inputNo,
+        divYes,
+        divNo,
+        validate,
+        validateDiv,
         inputs = [],
         focusable = []
       ;
 
-      inputs.push(inputYes);
-      inputs.push(inputNo);
+      wrap = doc.createElement('div');
+      wrap.className = self.options.className + '-question';
 
-      focusable.push(labelYes);
-      focusable.push(inputYes);
-      focusable.push(labelNo);
-      focusable.push(inputNo);
-      focusable.push(validate);
+      validateDiv = doc.createElement('div');
 
-      this.inputs.push(inputs);
-      this.focusable.push(focusable);
-
+      validate = doc.createElement('input');
       validate.type = 'button';
       validate.value = this.options.ok;
-      validate.style.background = 'none repeat scroll 0 0 #000';
-      validate.style.border = '1px solid ' + this.options.fg;
-      validate.style.color = this.options.fg;
+
+      if (self.options.inlinestyle) {
+        validate.style.background = 'none repeat scroll 0 0 #000';
+        validate.style.border = '1px solid ' + this.options.fg;
+        validate.style.color = this.options.fg;
+      }
+
       validateDiv.style.display = 'inline-block';
       validateDiv.appendChild(validate);
 
+      inputYes = doc.createElement('input');
+      inputNo = doc.createElement('input');
       inputYes.type = inputNo.type  = 'radio';
       inputYes.name = inputNo.name  = 'cookiebanner-' + name;
       inputYes.id   = 'cookiebanner-' + name + '-yes';
@@ -319,9 +319,11 @@
         self.nextStep();
       });
 
+      labelYes = doc.createElement('label');
       labelYes.innerHTML = this.options.yes;
       labelYes.htmlFor = inputYes.id;
 
+      labelNo = doc.createElement('label');
       labelNo.innerHTML  = this.options.no;
       labelNo.htmlFor = inputNo.id;
 
@@ -330,13 +332,15 @@
 
       form.appendChild(q);
 
-      divYes.style.padding = divNo.style.padding = '5px 16px';
-
+      divYes = doc.createElement('div');
+      divNo = doc.createElement('div');
+      if (self.options.inlinestyle) {
+        divYes.style.padding = divNo.style.padding = '5px 16px';
+      }
       divYes.style.display = 'inline-block';
       divYes.appendChild(labelYes);
       divYes.appendChild(inputYes);
       form.appendChild(divYes);
-
       divNo.style.display = 'inline-block';
       divNo.appendChild(labelNo);
       divNo.appendChild(inputNo);
@@ -345,6 +349,17 @@
       form.appendChild(validateDiv);
 
       wrap.appendChild(form);
+
+      focusable.push(labelYes);
+      focusable.push(inputYes);
+      focusable.push(labelNo);
+      focusable.push(inputNo);
+      focusable.push(validate);
+      this.focusable.push(focusable);
+
+      inputs.push(inputYes);
+      inputs.push(inputNo);
+      this.inputs.push(inputs);
 
       this.steps.push(wrap);
 
@@ -364,7 +379,7 @@
       ;
 
       wrap = doc.createElement('div');
-      validateDiv.className = self.options.className + '-question';
+      wrap.className = self.options.className + '-answer';
 
       validateDiv = doc.createElement('div');
       validateDiv.className = self.options.className + '-validate';
@@ -408,11 +423,7 @@
     },
 
     nextStep : function(){
-      var
-        step,
-        ii,
-        jj
-      ;
+      var step, ii, jj;
 
       if (this.currentStep > -1) {
         step = this.steps[this.currentStep];
@@ -441,6 +452,8 @@
         step = this.steps[this.currentStep];
         step.style.display = 'inline';
         step.setAttribute('aria-hidden', false);
+
+        console.log('aaa', this.inputs[this.currentStep])
 
         for (ii = 0; ii < this.inputs[this.currentStep].length; ii++) {
           this.inputs[this.currentStep][ii].checked = false;
@@ -665,9 +678,7 @@
     },
 
     run: function() {
-      var
-        self = this
-      ;
+      var self = this;
 
       if (self.visited()) {
         self.agree();
@@ -737,12 +748,7 @@
     },
 
     insert: function() {
-      var
-        self = this,
-        zidx,
-        el_x,
-        pipe
-      ;
+      var self = this, zidx, el_x, pipe;
 
       zidx = self.options.zindex;
 
